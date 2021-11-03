@@ -9,7 +9,7 @@ use syn::parse::{Parse, ParseStream};
 #[derive(Clone, Default, Debug)]
 pub(crate) struct InstrumentArgs {
     level: Option<Level>,
-    pub(crate) name: Option<LitStr>,
+    pub(crate) name: Option<Expr>,
     target: Option<LitStr>,
     pub(crate) skips: HashSet<Ident>,
     pub(crate) fields: Option<Fields>,
@@ -105,8 +105,9 @@ impl Parse for InstrumentArgs {
                 if args.name.is_some() {
                     return Err(input.error("expected only a single `name` argument"));
                 }
-                let name = input.parse::<StrArg<kw::name>>()?.value;
-                args.name = Some(name);
+                let _ = input.parse::<kw::name>()?;
+                let _ = input.parse::<Token![=]>()?;
+                args.name = Some(input.parse()?);
             } else if lookahead.peek(LitStr) {
                 // XXX: apparently we support names as either named args with an
                 // sign, _or_ as unnamed string literals. That's weird, but
